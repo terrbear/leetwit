@@ -32,8 +32,12 @@ class Twit
   end
   
   def send_tweet(text)
-    @client.status(:post, text)
-    puts "[\e[31mtweet sent\e[0m]"
+    begin
+      @client.status(:post, text)
+      puts "[\e[31mtweet sent\e[0m]"
+    rescue Timeout::Error
+      puts "[\e[31mTIMEOUT ERROR\e[0m]"
+    end
   end
   
   def add_friend(friend_name)
@@ -41,7 +45,8 @@ class Twit
   end
   
   def display_tweet(tweet)
-    puts "\e[32m#{tweet.user.screen_name}\e[0m: #{tweet.text}"
+    text = tweet.text.to_s.gsub(/&quot;/, '\'').gsub(/&lt;/, '<').gsub(/&gt;/, '>')
+    puts "\e[32m#{tweet.user.screen_name}\e[0m: #{text}"
   end
 end
 
