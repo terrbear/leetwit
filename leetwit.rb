@@ -1,9 +1,10 @@
 #!/usr/bin/ruby
 
-require 'rubygems'
-gem 'twitter4r'
-require 'twitter'
+require 'twitter4r/lib/twitter'
 require 'time'
+require 'net/https'
+require 'uri'
+require 'json'
 
 class Twit
   def initialize(username, password)
@@ -99,7 +100,12 @@ class Console
     puts ":help       : show this message"
     puts ":update, :u : update the timeline to see the latest tweets"
     puts ":quit, :q   : quit"
+    puts ":terrbear   : add terrbear to your friends list"
     puts "if you want to tweet, just type something and press enter."  
+  end
+  
+  def terrbear
+    @twit.send_tweet("follow terrbear")
   end
   
   def update
