@@ -9,12 +9,12 @@ class Twitter::Client
   include Twitter::ClassUtilMixin
 end
 
-require('twitter/client/base.rb')
-require('twitter/client/timeline.rb')
-require('twitter/client/status.rb')
-require('twitter/client/friendship.rb')
-require('twitter/client/messaging.rb')
-require('twitter/client/user.rb')
-require('twitter/client/auth.rb')
-require('twitter/client/favorites.rb')
+require('twitter4r/lib/twitter/client/base.rb')
+require('twitter4r/lib/twitter/client/timeline.rb')
+require('twitter4r/lib/twitter/client/status.rb')
+require('twitter4r/lib/twitter/client/friendship.rb')
+require('twitter4r/lib/twitter/client/messaging.rb')
+require('twitter4r/lib/twitter/client/user.rb')
+require('twitter4r/lib/twitter/client/auth.rb')
+require('twitter4r/lib/twitter/client/favorites.rb')
 
