@@ -38,6 +38,10 @@ class Twit
       puts "[\e[31mtweet sent\e[0m]"
     rescue Timeout::Error
       puts "[\e[31mTIMEOUT ERROR\e[0m]"
+    rescue Errno::EPIPE
+      puts "[\e31mNETWORK ERROR\e[0m] (try again shortly)"
+    rescue Twitter::RESTError
+      puts "[\e[31SURPRISE! Twitter Exploded.\e[0m] (try again shortly)"
     end
   end
   
