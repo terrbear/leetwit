@@ -59,13 +59,14 @@ class Twit
     rescue Twitter::RESTError
 			debug("rest error: #{$!} - this means no new tweets")
       regular("no updates :(\n") if @options['timestamps']
-      return
+      return false
     end
     tweets.reverse.each do |tweet|
       display_tweet(tweet)
       @last_time = tweet.created_at
     end
 		debug("last created_at time: #{@last_time}")
+		return true
   end
   
   def send_tweet(text)
@@ -136,8 +137,7 @@ class Console
   def spawn_update_thread
     Thread.new(@twit) do |twit|
       loop do
-        twit.display_friend_tweets
-        prompt
+        prompt if twit.display_friend_tweets
         sleep 180
       end
     end
