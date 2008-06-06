@@ -6,45 +6,84 @@ require 'net/https'
 require 'uri'
 require 'json'
 
+module ConsoleOutput
+	def header(str)
+    puts "\n-----------------------\e[31m#{str}\e[0m-------------------------\n" 
+	end
+
+	def notify(str)
+ 		puts "[\e[33m#{str}\e[0m]"
+	end
+
+	def error(str)
+ 		puts "[\e[31m#{str}\e[0m]"
+	end
+
+	def regular(str)
+		puts str
+	end
+end
+
+module Options
+	include ConsoleOutput
+	attr_accessor :options
+
+	def set_option(option, value)
+		self.options[option] = value =~ /true|on/i
+	end
+  
+	def debug(msg)
+		notify msg if self.options['debug']
+	end	
+end
+
 class Twit
+	include Options
+
   def initialize(username, password)
+		self.options = {'debug' => false, 'timestamps' => false}
     @username = username
     @password = password
     @last_time = nil
     @client = Twitter::Client.new(:login => @username, :password => @password)
   end
-  
+
   def display_friend_tweets
-    puts "\n-----------------------\e[31m#{Time.now}\e[0m-------------------------\n"
+		header(Time.now) if self.options['timestamps']
     begin
       if @last_time.nil?
         tweets = @client.timeline_for(:friends)
       else
-        tweets = @client.timeline_for(:friends, :since => @last_time)
+        tweets = @client.timeline_for(:friends, :since => (@last_time + 1))
       end
     rescue Twitter::RESTError
-      puts "no updates :(\n"
+			debug("rest error: #{$!} - this means no new tweets")
+      regular("no updates :(\n") if @options['timestamps']
       return
     end
     tweets.reverse.each do |tweet|
       display_tweet(tweet)
       @last_time = tweet.created_at
     end
+		debug("last created_at time: #{@last_time}")
   end
   
   def send_tweet(text)
     begin
       @client.status(:post, text)
-      puts "[\e[31mtweet sent\e[0m]"
+			notify("tweet sent")
     rescue Timeout::Error
-      puts "[\e[31mTIMEOUT ERROR\e[0m]"
+			debug("timeout error: #{$!}")
+			error("TIMEOUT ERROR")
     rescue Errno::EPIPE
-      puts "[\e31mNETWORK ERROR\e[0m] (try again shortly)"
+			debug("pipe error: #{$!}")
+			error("NETWORK ERROR (try again shortly)")
     rescue Twitter::RESTError
-      puts "[\e[31SURPRISE! Twitter Exploded.\e[0m] (try again shortly)"
+			debug("rest error: #{$!}")
+			error("OMG THIS NEVER HAPPENS. Twitter assploded. (try again shortly)")
     end
   end
-  
+
   def add_friend(friend_name)
     @client.friend(:add, friend_name)
   end
@@ -56,9 +95,11 @@ class Twit
 end
 
 class Console
+	include Options
 
   def initialize(args = {})
-    puts "Welcome to leetwit!"
+		self.options = {'debug' => false}
+    regular "Welcome to leetwit!"
     if args[:username].nil?
       print "Enter your username, noob: "
       username = gets.chomp!
@@ -67,7 +108,7 @@ class Console
       print "\e[0m"
     end
     @twit = Twit.new(args[:username] || username, args[:password] || password)
-    puts "We're all hooked up. Type :help if you're confused."
+    regular "We're all hooked up. Type :help if you're confused."
   end
     
   def run
@@ -77,7 +118,15 @@ class Console
       command = gets
       next if command.chomp == ''
       if command =~ /^:/          
-        send(command.split(" ").first.sub(/:/, ''))
+				cmd = command.split(" ")
+				begin
+        	send(cmd.first.sub(/:/, ''), *cmd[1, cmd.length])
+				rescue SocketError
+					error "Network Failure Detected. Check the plug?"
+				rescue
+					debug("error: #{$!.inspect}")
+					error "whoah there partner. i'm not sure what you're trying to do. try :help."
+				end
       else
         @twit.send_tweet(command)
       end
@@ -104,9 +153,26 @@ class Console
     puts ":help       : show this message"
     puts ":update, :u : update the timeline to see the latest tweets"
     puts ":quit, :q   : quit"
+		puts ":set <option> <value> : set option to value"
+		puts ":read <option> : show value for option"
     puts ":terrbear   : add terrbear to your friends list"
     puts "if you want to tweet, just type something and press enter."  
   end
+
+	def set(option, value)
+		return unless ['timestamps', 'debug'].include? option
+		set_option(option, value)
+		@twit.set_option(option, value)	
+	end
+
+	def set_help
+		puts "valid options: debug, timestamps"
+		puts "example: :set timestamps off"
+	end
+
+	def read(option)
+		puts "#{option}: #{self.options[option] ? "on" : "off"}"
+	end
   
   def terrbear
     @twit.send_tweet("follow terrbear")
@@ -118,7 +184,7 @@ class Console
     
   def quit
     @thread.kill if @thread
-    puts "peace!"
+    notify "peace!"
     exit
   end
   
@@ -126,7 +192,7 @@ class Console
   alias :u :update
   
   def method_missing(not_used)
-   puts "Sorry, I don't know what you're trying to do. Type :help to see what you can do."
+   error "Sorry, I don't know what you're trying to do. Type :help to see what you can do."
   end
 end
 
