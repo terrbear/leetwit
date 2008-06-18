@@ -61,6 +61,7 @@ class Twit
       regular("no updates :(\n") if @options['timestamps']
       return false
     end
+		puts unless @options['timestamps']
     tweets.reverse.each do |tweet|
       display_tweet(tweet)
       @last_time = tweet.created_at
