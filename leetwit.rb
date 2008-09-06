@@ -114,7 +114,7 @@ class Console
   end
     
   def run
-    spawn_update_thread
+    #spawn_update_thread
     loop do
       prompt
       command = gets
