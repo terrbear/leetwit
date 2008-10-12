@@ -6,6 +6,8 @@ require 'net/https'
 require 'uri'
 require 'json'
 
+class InvalidTweetError < StandardError; end
+
 module ConsoleOutput
 	def header(str)
     puts "\n-----------------------\e[31m#{str}\e[0m-------------------------\n" 
@@ -72,8 +74,12 @@ class Twit
   
   def send_tweet(text)
     begin
+			raise InvalidTweetError.new if text.strip.split(" ").size <= 1
       @client.status(:post, text)
 			notify("tweet sent")
+		rescue InvalidTweetError
+			debug("invalid tweet: #{text}")
+			error("No one word or blank text tweets. This is for your own good.")
     rescue Timeout::Error
 			debug("timeout error: #{$!}")
 			error("TIMEOUT ERROR")
