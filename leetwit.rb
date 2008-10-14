@@ -55,8 +55,10 @@ class Twit
     begin
       if @last_time.nil?
         tweets = @client.timeline_for(:friends)
+				dms = []
       else
         tweets = @client.timeline_for(:friends, :since => (@last_time + 1))
+				dms = @client.messages(:received, :since => (@last_time + 1))
       end
     rescue Twitter::RESTError
 			debug("rest error: #{$!} - this means no new tweets")
@@ -68,6 +70,12 @@ class Twit
       display_tweet(tweet)
       @last_time = tweet.created_at
     end
+
+		dms.reverse.each do |dm|
+			display_dm(dm)
+			@last_time = [@last_time, dm.created_at].max
+		end
+
 		debug("last created_at time: #{@last_time}")
 		return true
   end
@@ -100,6 +108,11 @@ class Twit
     text = tweet.text.to_s.gsub(/&quot;/, '\'').gsub(/&lt;/, '<').gsub(/&gt;/, '>')
     puts "\e[32m#{tweet.user.screen_name}\e[0m: #{text}"
   end
+
+	def display_dm(dm)
+    text = dm.text.to_s.gsub(/&quot;/, '\'').gsub(/&lt;/, '<').gsub(/&gt;/, '>')
+    puts "\e[32m*** DM from #{dm.sender.screen_name}\e[0m: #{text}"
+	end
 end
 
 class Console
