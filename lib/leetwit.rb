@@ -60,7 +60,7 @@ class Twit
 				dms = []
       else
         tweets = @client.timeline_for(:friends, :since => (@last_time + 1))
-				dms = @client.messages(:received, :since => (@last_time + 1))
+				dms = [] #@client.messages(:received, :since => (@last_time + 1))
       end
     rescue Twitter::RESTError
 			debug("rest error: #{$!} - this means no new tweets")
