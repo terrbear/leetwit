@@ -1,6 +1,8 @@
 #!/usr/bin/ruby
 
-require 'twitter4r/lib/twitter'
+require 'rubygems'
+gem 'twitter4r'
+require 'twitter'
 require 'time'
 require 'net/https'
 require 'uri'

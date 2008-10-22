@@ -1,0 +1,4 @@
+#!/usr/bin/env ruby
+
+require 'leetwit'
+Console.new.run
